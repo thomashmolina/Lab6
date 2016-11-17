@@ -292,7 +292,7 @@ Then create views/login.html
 <body>
   <div class="form-container">
     <p class="form-header">Login</p>
-    <form method="POST">
+    <form method="POST" action="/login">
         <label>Username:</label>
         <input type="text" name="username"><br>
         <label>Password:</label>
@@ -317,7 +317,7 @@ Then create views/signup.html
 <body>
   <div class="form-container">
     <p class="form-header">Sign Up</p>
-    <form method="POST">
+    <form method="POST" action="/signup">
       <label>Username:</label>
         <input type="text" name="username"><br>
       <label>Password:</label>
