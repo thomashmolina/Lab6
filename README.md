@@ -421,8 +421,7 @@ node auth_server.js
 </pre>
 You will find that you need to install several packages:
 <pre>
-npm install body-parser
-npm install cookie-parser
+npm install 
 npm install express-session
 npm install connect-mongo
 npm install ejs
