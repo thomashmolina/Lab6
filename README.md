@@ -19,6 +19,7 @@ express auth
 cd auth
 mkdir models
 mkdir static
+mkdir controllers
 mkdir static/css
 </pre>
 
@@ -62,6 +63,8 @@ app.use(cookieParser());
 app.use(expressSession({
   secret: 'SECRET',
   cookie: {maxAge:2628000000},
+  resave: true,
+  saveUninitialized: true,
   store: new mongoStore({
       mongooseConnection:mongoose.connection
     })
@@ -131,7 +134,7 @@ module.exports = function(app) {
 ```
 
 #4. Now you need to implement the route code to support interaction with the MongoDB model. 
-Put it in "users_conroller.js".
+Put it in "controllers/users_conroller.js".
 ```javascript
 var crypto = require('crypto');
 var mongoose = require('mongoose'),
@@ -394,8 +397,18 @@ input[type=submit]{
   margin-left:85px;
 }
 ```
-Test your application to make sure you can create a new user, change the colors and see them preserved during the session, then logout to destroy the session.
-
+Test your application to make sure you can create a new user, change the colors and see them preserved during the session, then logout to destroy the session.  You can run it by typing:
+<pre>
+node auth_server.js
+</pre>
+You will find that you need to install several packages:
+<pre>
+npm install body-parser
+npm install cookie-parser
+npm install express-session
+npm install connect-mongo
+npm install ejs
+</pre>
 Passoff:
 
 You should test your server to make sure it works correctly.  Your submission to learningsuite should contain:
