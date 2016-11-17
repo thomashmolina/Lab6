@@ -18,6 +18,8 @@ When the user registers, you will create a document in the mongo database that i
 express auth
 cd auth
 mkdir models
+mkdir static
+mkdir static/css
 </pre>
 
 #2. Create a schema for your user document.  
