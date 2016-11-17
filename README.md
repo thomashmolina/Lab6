@@ -17,8 +17,9 @@ When the user registers, you will create a document in the mongo database that i
 <pre>
 express auth
 cd auth
-
+mkdir models
 </pre>
+
 #2. Create a schema for your user document.  
 Notice that the schema defined implements a unique username as well as email, color, and hashed_password fields. The final line creates the model in Mongoose.  Put this file in models/users_model.js
 ```javascript
