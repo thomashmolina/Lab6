@@ -389,7 +389,7 @@ Test your application to make sure you can create a new user, change the colors 
 
 Passoff:
 
-You should test your server to make sure it works with your jquery script.  Your submission to learningsuite should contain:
+You should test your server to make sure it works correctly.  Your submission to learningsuite should contain:
 
 
 	- The URL of the working application on your EC2 node (or other host). 
@@ -398,8 +398,8 @@ You should test your server to make sure it works with your jquery script.  Your
 
 <strong>Passoff Level</strong> | <strong>Behavior</strong> |	<strong>Points</strong>
 --- | --- | ---
-Minimal Passoff | The GET interface for your REST service returns the current comments| 25%
-Basic Passoff | You can pass the POST interface for your REST service a new comment and it correctly inserts it. | 55%
-Good Passoff | Your jquery application displays things properly. | 80%
-Full Passoff | You add the ability for users to delete comments. | 90%
+Minimal Passoff | You can create a new user| 25%
+Basic Passoff | When you logout, you can login using that created user. | 55%
+Good Passoff | Color changes persist during the session. | 80%
+Full Passoff | When you logout the session is destroyed. | 90%
 Perfect Passoff | Your code is included in your submission, and your page looks really good. This is subjective, so wow us. | 100%
