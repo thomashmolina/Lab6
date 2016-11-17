@@ -13,7 +13,8 @@ The project is organized into the following directory structure:
 
 When the user registers, you will create a document in the mongo database that includes the password.  When the user logs in later, you will check to make sure the password is correct.
 
-1. Create a schema for your user document.  Notice that the schema defined implements a unique username as well as email, color, and hashed_password fields. The final line creates the model in Mongoose.  Put this file in models/users_model.js
+#1. Create a schema for your user document.  
+Notice that the schema defined implements a unique username as well as email, color, and hashed_password fields. The final line creates the model in Mongoose.  Put this file in models/users_model.js
 ```javascript
 var mongoose = require('mongoose'),
     Schema = mongoose.Schema;
@@ -25,7 +26,8 @@ var UserSchema = new Schema({
 });
 mongoose.model('User', UserSchema);
 ```
-2. Now implement the Express webserver for the application. When you created a project before, this code was in app.js.  The book puts it in a file named "auth_server.js".You should recognize much of the code. The general flow of this code is to first require the necessary modules, connect to the MongoDB database, configure the Express server, and begin listening.
+#2. Now implement the Express webserver for the application. 
+When you created a project before, this code was in app.js.  The book puts it in a file named "auth_server.js".You should recognize much of the code. The general flow of this code is to first require the necessary modules, connect to the MongoDB database, configure the Express server, and begin listening.
 The line "require('./models/users_model.js');" ensures that the User model is registered in Mongoose:
 
 The line "require('./routes')(app);" adds the routes from ./routes.js to the Express server and passes the "app" object to the routes.
@@ -58,7 +60,8 @@ app.use(expressSession({
 require('./routes')(app);
 app.listen(3000);
 ```
-3. Now add the routes.js file. This file implements the routes necessary to support signup, login, editing, and user deletion. This code also implements static routes that support loading the static files.
+#3. Now add the routes.js file. 
+This file implements the routes necessary to support signup, login, editing, and user deletion. This code also implements static routes that support loading the static files.
 
 Notice that req.session is used frequently throughout the routes code. This is the session created when expressSession() middleware was added in the previous section. Notice the code is called to clean up the existing session data when the user logs out or is deleted "req.session.destroy(function(){});"
 
@@ -118,7 +121,8 @@ module.exports = function(app) {
 }
 ```
 
-4. Now you need to implement the route code to support interaction with the MongoDB model. Put it in "users_conroller.js".
+#4. Now you need to implement the route code to support interaction with the MongoDB model. 
+Put it in "users_conroller.js".
 ```javascript
 var crypto = require('crypto');
 var mongoose = require('mongoose'),
@@ -235,9 +239,153 @@ The "updateUser" route finds the user and then sets the values from the req.body
 
 The deleteUser route finds the user in the MongoDB database and then calls the remove() method on the User object to remove the user from the database. Also notice that req.session.destroy() is called to remove the session because the user no longer exists.
 
-5. Now that the routes are set up and configured, you are ready to implement the views that are rendered by the routes. These views are intentionally very basic to allow you to see the interaction between the EJS render engine and the AngularJS support functionality. The following sections discuss the index, signup, login, and user views.
+#5. Now that the routes are set up and configured, you are ready to implement the views that are rendered by the routes. 
+These views are intentionally very basic to allow you to see the interaction between the EJS render engine and the AngularJS support functionality. The following sections discuss the index, signup, login, and user views.
 
 These views are implemented as EJS templates. This chapter uses the EJS render engine because it is very similar to HTML, so you do not need to learn a new template language, such as Jade. However, you can use any template engine that is supported by Express to produce the same results.
+
+Create views/index.html
+```
+<!doctype html>
+<html ng-app="myApp">
+<head>
+  <title>User Login and Sessions</title>
+  <link rel="stylesheet" type="text/css" 
+      href="/static/css/styles.css" />
+</head>
+<body>
+  <div ng-controller="myController">
+    <h2>Welcome. You are Logged In as <%= username %></h2>
+    <a href="/logout">logout</a>
+    <a href="/user">Edit User</a>
+    <p>Place Your Code Here<p>
+  </div>
+  <hr><%= msg %>
+  <hr>Color <%= color %>
+  <script src="http://code.angularjs.org/1.2.9/angular.min.js"></script>
+  <script src="/static/js/my_app.js"></script>
+</body>
+</html>
+```
+Then create views/login.html
+```
+<!doctype html>
+<html>
+<head>
+  <title>User Login and Sessions</title>
+  <link rel="stylesheet" type="text/css" 
+        href="/static/css/styles.css" />
+</head>
+<body>
+  <div class="form-container">
+    <p class="form-header">Login</p>
+    <form method="POST">
+        <label>Username:</label>
+        <input type="text" name="username"><br>
+        <label>Password:</label>
+        <input type="password" name="password"><br>
+        <input type="submit" value="Login">
+    </form>
+  </div>
+  <a href="/signup">Sign Up</a>
+  <hr><%= msg %>
+</body>
+</html>
+```
+Then create views/signup.html
+```
+<!doctype html>
+<html>
+<head>
+  <title>User Login and Sessions</title>
+  <link rel="stylesheet" type="text/css" 
+      href="/static/css/styles.css" />
+</head>
+<body>
+  <div class="form-container">
+    <p class="form-header">Sign Up</p>
+    <form method="POST">
+      <label>Username:</label>
+        <input type="text" name="username"><br>
+      <label>Password:</label>
+        <input type="password" name="password"><br>
+      <label>Email:</label>
+        <input type="email" name="email"><br>
+      <input type="submit" value="Register">
+    </form>       
+  </div>
+  <hr><%= msg %>
+</body>
+</html>
+```
+Then create views/user.html
+```
+<!doctype html>
+<html ng-app="myApp">
+<head>
+  <title>User Login and Sessions</title>
+  <link rel="stylesheet" type="text/css" 
+      href="/static/css/styles.css" />
+</head>
+<body>
+  <div class="form-container" ng-controller="myController">
+    <p class="form-header">User Profile</p>
+    <form method="POST" action="/user/update">
+       <label>Username:</label>
+         <input type="text" name="username" 
+                ng-model="user.username" disabled><br>
+       <label>Email:</label>
+         <input type="email" name="email" 
+                ng-model="user.email"><br>
+       <label>Favorite Color:</label>
+         <input type="text" name="color" 
+                ng-model="user.color"><br>
+       <input type="submit" value="Save">
+    </form>       
+  </div>
+  <form method="POST" action="/user/delete">
+    <input type="submit" value="Delete User">
+  </form>
+  <hr><%= msg %>
+  <script src="http://code.angularjs.org/1.2.9/angular.min.js"></script>
+  <script src="/static/js/my_app.js"></script>
+  <a href="/">Home</a>
+</body>
+</html>
+```
+You will also need static/css/styles.css
+```
+div.form-container{
+  display: inline-block;
+  border: 4px ridge blue;
+  width: 280px;
+  border-radius:10px;
+  margin:10px;
+}
+p.form-header{
+  margin:0px;
+  font: 24px bold;
+  color:white;  background:blue;
+  text-align:center;
+}
+form{
+  margin:10px;
+}
+label{ width:80px; display: inline-block;}
+input{
+  border: 3px ridge blue;
+  border-radius:5px;
+  padding:3px;
+}
+input[type=submit]{
+  font: 18px bold;
+  width: 120px;
+  color:white;  background:blue;
+  margin-top:15px;
+  margin-left:85px;
+}
+```
+Test your application to make sure you can create a new user, change the colors and see them preserved during the session, then logout to destroy the session.
 
 Passoff:
 
