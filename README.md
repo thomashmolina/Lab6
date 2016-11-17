@@ -21,6 +21,7 @@ mkdir models
 mkdir static
 mkdir controllers
 mkdir static/css
+mkdir static/js
 </pre>
 
 #2. Create a schema for your user document.  
@@ -397,6 +398,23 @@ input[type=submit]{
   margin-left:85px;
 }
 ```
+And you will need the angular controller "static/js/my_app.js"
+```js
+angular.module('myApp', []).
+  controller('myController', ['$scope', '$http', 
+                              function($scope, $http) {
+    $http.get('/user/profile')
+        .success(function(data, status, headers, config) {
+      $scope.user = data;
+      $scope.error = "";
+    }).
+    error(function(data, status, headers, config) {
+      $scope.user = {};
+      $scope.error = data;
+    });
+  }]);
+```
+
 Test your application to make sure you can create a new user, change the colors and see them preserved during the session, then logout to destroy the session.  You can run it by typing:
 <pre>
 node auth_server.js
