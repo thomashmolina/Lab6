@@ -5,7 +5,7 @@ Authentication is a critical part of almost any application.  Passport allows yo
 
 The project is organized into the following directory structure:
 * ./: Contains the base application files and supporting folders. This is the project root.
-* ../node_modules: Created when the NPMs listed above are installed in the system.
+* ./node_modules: Created when the NPMs listed above are installed in the system.
 * ./controllers: Contains the Express route controllers that provide the interaction between routes and changes to the MongoDB database.
 * ./models: Contains the Mongoose model definitions for objects in the database.
 * ./static: Contains any static files that need to be sent, such as CSS and AngularJS code.
