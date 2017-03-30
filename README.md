@@ -428,17 +428,17 @@ npm install ejs
 </pre>
 Passoff:
 
-You should test your server to make sure it works correctly.  Your submission to learningsuite should contain:
+You should test your server to make sure it works correctly. You should have utilized google classroom to get started. Your submission to learningsuite should contain:
 
 
 	- The URL of the working application on your EC2 node (or other host). 
 
 
 
-<strong>Passoff Level</strong> | <strong>Behavior</strong> |	<strong>Points</strong>
---- | --- | ---
-Minimal Passoff | You can create a new user| 25%
-Basic Passoff | When you logout, you can login using that created user. | 55%
-Good Passoff | Color changes persist during the session. | 80%
-Full Passoff | When you logout the session is destroyed. | 90%
-Perfect Passoff | Your code is included in your submission, and your page looks really good. This is subjective, so wow us. | 100%
+<strong>Behavior</strong> |	<strong>Points</strong>
+--- | ---
+You can create a new user who is auto-logged-in | 25
+When you logout, you can login using that created user. | 15
+User color changes persist through authentication cycles. | 15
+When you logout the session is destroyed and non-authenticated users cannot access the site. | 20
+Your code is included in your submission, your application works with the test driver, and your page looks really good. This is subjective, so wow us. | 25
