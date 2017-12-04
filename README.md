@@ -1,14 +1,13 @@
 # Lab6-Passport
 CS260 Passport Lab
 
-Authentication is a critical part of almost any application.  Passport allows you to use an authenticaion framework for local database authentication as well as authentication through google, twitter or facebook.  In this lab, you will set up local authentication as shown in [Chapter 26](http://proquest.safaribooksonline.com/book/programming/javascript/9780133844351/vi-building-practical-web-application-components/ch26_html) of the book "Node.js, MongoDB, and AngularJS Web Development".  This lab will have a little different format because we want you to use the style from the book.
+Authentication is a critical part of almost any application.  Passport allows you to use an authenticaion framework for local database authentication as well as authentication through google, twitter or facebook.  In this lab, you will set up local authentication for your application.  
 
 The project is organized into the following directory structure:
 * ./: Contains the base application files and supporting folders. This is the project root.
 * ./node_modules: Created when the NPMs listed above are installed in the system.
 * ./controllers: Contains the Express route controllers that provide the interaction between routes and changes to the MongoDB database.
 * ./models: Contains the Mongoose model definitions for objects in the database.
-* ./static: Contains any static files that need to be sent, such as CSS and AngularJS code.
 * ./views: Contains the HTML templates that will be rendered by EJS.
 
 When the user registers, you will create a document in the mongo database that includes the password.  When the user logs in later, you will check to make sure the password is correct.
@@ -18,10 +17,7 @@ When the user registers, you will create a document in the mongo database that i
 express auth
 cd auth
 mkdir models
-mkdir static
 mkdir controllers
-mkdir static/css
-mkdir static/js
 </pre>
 
 #2. Create a schema for your user document.  
@@ -38,29 +34,29 @@ var UserSchema = new Schema({
 mongoose.model('User', UserSchema);
 ```
 #2. Now implement the Express webserver for the application. 
-When you created a project before, this code was in app.js.  The book puts it in a file named "auth_server.js".You should recognize much of the code. The general flow of this code is to first require the necessary modules, connect to the MongoDB database, configure the Express server, and begin listening.
-The line "require('./models/users_model.js');" ensures that the User model is registered in Mongoose:
-
-The line "require('./routes')(app);" adds the routes from ./routes.js to the Express server and passes the "app" object to the routes.
+When you create a project, the setup code is in app.js. The general flow of this code is to first require the necessary modules, connect to the MongoDB database, configure the Express server, and begin listening.
+The line "require('./models/users_model.js');" ensures that the User model is loaded for Mongoose:
 
 The Express configuration code uses the connect-mongo library to register the MongoDB connection as the persistent store for the authenticated sessions. Notice that the connect-mongo store is passed an object with session set to the express-session module instance. Also notice that the db value in the mongoStore instance is set to the mongoose.connection.db database that is already connected.  The session will be passed back to the browser in a cookie and will be sent to the server each time another HTTP request is made.  You can change the port from 3000 to something else if you want to.
 
 ```javascript
 var express = require('express');
-var bodyParser = require('body-parser');
+var path = require('path');
+var favicon = require('serve-favicon');
+var logger = require('morgan');
 var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
 var expressSession = require('express-session');
 var mongoStore = require('connect-mongo')({session: expressSession});
 var mongoose = require('mongoose');
 require('./models/users_model.js');
-var conn = mongoose.connect('mongodb://localhost/myapp');
+var conn = mongoose.connect('mongodb://localhost/myapp', { useMongoClient: true });
+
+var routes = require('./routes/index');
+var users = require('./routes/users');
+
 var app = express();
-app.engine('.html', require('ejs').__express);
-app.set('views', __dirname + '/views');
-app.set('view engine', 'html');
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(cookieParser());
+
 app.use(expressSession({
   secret: 'SECRET',
   cookie: {maxAge:2628000000},
@@ -70,68 +66,126 @@ app.use(expressSession({
       mongooseConnection:mongoose.connection
     })
   }));
-require('./routes')(app);
-app.listen(3000);
+
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.engine('.html', require('ejs').__express);
+app.set('view engine', 'html');
+
+
+// uncomment after placing your favicon in /public
+//app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/', routes);
+app.use('/users', users);
+
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+    var err = new Error('Not Found');
+    err.status = 404;
+    next(err);
+});
+
+// error handlers
+
+// development error handler
+// will print stacktrace
+if (app.get('env') === 'development') {
+    app.use(function(err, req, res, next) {
+        res.status(err.status || 500);
+        res.render('error', {
+            message: err.message,
+            error: err
+        });
+    });
+}
+
+// production error handler
+// no stacktraces leaked to user
+app.use(function(err, req, res, next) {
+    res.status(err.status || 500);
+    res.render('error', {
+        message: err.message,
+        error: {}
+    });
+});
+
+
+module.exports = app;
 ```
-#3. Now add the routes.js file. 
+#3. Now add the routes/index.js file. 
 This file implements the routes necessary to support signup, login, editing, and user deletion. This code also implements static routes that support loading the static files.
 
 Notice that req.session is used frequently throughout the routes code. This is the session created when expressSession() middleware was added in the previous section. Notice the code is called to clean up the existing session data when the user logs out or is deleted "req.session.destroy(function(){});"
 
 The code attaches text strings to the session.msg variable so that they can be added to the template. (This is just for example purpose so that you can see the status of requests on the webpages.)
 
-Notice that the express server will serve static files from the "static" directory.  When the "/" route is accessed, the code will check the cookie to see if there is already a session for the user.  If so, it renders the "views/index.html" file, otherwise it redirects them to the login page at "views/login.html".
+Notice that the express server will serve static files from the "public" directory.  It will create new ejs content from the views directory.  When the "/" route is accessed, the code will check the cookie to see if there is already a session for the user.  If so, it renders the "views/index.html" file, otherwise it redirects them to the login page at "views/login.html".
 
 ```javascript
-var crypto = require('crypto');
 var express = require('express');
-module.exports = function(app) {
-  var users = require('./controllers/users_controller');
-  app.use('/static', express.static( './static')).
-      use('/lib', express.static( '../lib')
-  );
-  app.get('/', function(req, res){
+var router = express.Router();
+var expressSession = require('express-session');
+
+var users = require('../controllers/users_controller');
+console.log("before / Route");
+router.get('/', function(req, res){
+    console.log("/ Route");
+//    console.log(req);
+    console.log(req.session);
     if (req.session.user) {
+      console.log("/ Route if user");
       res.render('index', {username: req.session.username,
                            msg:req.session.msg,
                            color:req.session.color});
     } else {
+      console.log("/ Route else user");
       req.session.msg = 'Access denied!';
       res.redirect('/login');
     }
-  });
-  app.get('/user', function(req, res){
+});
+router.get('/user', function(req, res){
+    console.log("/user Route");
     if (req.session.user) {
       res.render('user', {msg:req.session.msg});
     } else {
       req.session.msg = 'Access denied!';
       res.redirect('/login');
     }
-  });
-  app.get('/signup', function(req, res){
+});
+router.get('/signup', function(req, res){
+    console.log("/signup Route");
     if(req.session.user){
       res.redirect('/');
     }
     res.render('signup', {msg:req.session.msg});
-  });
-  app.get('/login',  function(req, res){
+});
+router.get('/login',  function(req, res){
+    console.log("/login Route");
     if(req.session.user){
       res.redirect('/');
     }
     res.render('login', {msg:req.session.msg});
-  });
-
-  app.get('/logout', function(req, res){
+});
+router.get('/logout', function(req, res){
+    console.log("/logout Route");
     req.session.destroy(function(){
       res.redirect('/login');
     });
   });
-  app.post('/signup', users.signup);
-  app.post('/user/update', users.updateUser);
-  app.post('/user/delete', users.deleteUser);
-  app.post('/login', users.login);
-  app.get('/user/profile', users.getUserProfile);
-}
+router.post('/signup', users.signup);
+router.post('/user/update', users.updateUser);
+router.post('/user/delete', users.deleteUser);
+router.post('/login', users.login);
+router.get('/user/profile', users.getUserProfile);
+
+
+module.exports = router;
 ```
 
 #4. Now you need to implement the route code to support interaction with the MongoDB model. 
@@ -171,7 +225,7 @@ exports.login = function(req, res){
   .exec(function(err, user) {
     if (!user){
       err = 'User Not Found.';
-    } else if (user.hashed_password === 
+    } else if (user.hashed_password ===
                hashPW(req.body.password.toString())) {
       req.session.regenerate(function(){
         console.log("login");
@@ -239,6 +293,7 @@ exports.deleteUser = function(req, res){
     }
   });
 };
+
 ```
 The logic for the "signup" route first creates a new User object and then adds the email address and hashed password, using the hashPW() function defined in the same file. Then the Mongoose save() method is called on the object to store it in the database. On error, the user is redirected back to the signup page.
 
@@ -255,153 +310,159 @@ The deleteUser route finds the user in the MongoDB database and then calls the r
 #5. Now that the routes are set up and configured, you are ready to implement the views that are rendered by the routes. 
 These views are intentionally very basic to allow you to see the interaction between the EJS render engine and the AngularJS support functionality. The following sections discuss the index, signup, login, and user views.
 
-These views are implemented as EJS templates. This chapter uses the EJS render engine because it is very similar to HTML, so you do not need to learn a new template language, such as Jade. However, you can use any template engine that is supported by Express to produce the same results.
+These views are implemented as EJS templates. This approach uses the EJS render engine because it is very similar to HTML, so you do not need to learn a new template language, such as Jade. However, you can use any template engine that is supported by Express to produce the same results.
 
 Create views/index.html
 ```
 <!doctype html>
-<html ng-app="myApp">
+<html ng-app="myApp"> 
+    
 <head>
-  <title>User Login and Sessions</title>
-  <link rel="stylesheet" type="text/css" 
-      href="/static/css/styles.css" />
+    <title>User Login and Sessions</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/style.css" />
 </head>
-<body>
-  <div ng-controller="myController">
-    <h2>Welcome. You are Logged In as <%= username %></h2>
-    <a href="/logout">logout</a>
-    <a href="/user">Edit User</a>
-    <p>Place Your Code Here<p>
-  </div>
-  <hr><%= msg %>
-  <hr>Color <%= color %>
-  <script src="http://code.angularjs.org/1.2.9/angular.min.js"></script>
-  <script src="/static/js/my_app.js"></script>
+        
+<body>  
+    <div ng-controller="myController">
+        <h2 id="welcomeText">Welcome. You are Logged In as
+            <%= username %>
+        </h2>
+        <a id="logoutLink" href="/logout">logout</a>
+        <a id="editLink" href="/user">Edit User</a>
+        <p>Place Your Code Here
+            <p>
+    </div>
+    <hr>
+    <span id="indexMsg">
+        <%= msg %>
+    </span>
+    <hr>
+    <span id="colorText">
+    Color
+        <%= color %>
+      </span>
+    <script src="http://code.angularjs.org/1.2.9/angular.min.js"></script>
+    <script src="/javascripts/my_app.js"></script>
 </body>
+      
 </html>
 ```
 Then create views/login.html
 ```
 <!doctype html>
 <html>
+    
 <head>
-  <title>User Login and Sessions</title>
-  <link rel="stylesheet" type="text/css" 
-        href="/static/css/styles.css" />
+    <title>User Login and Sessions</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/style.css" />
 </head>
-<body>
-  <div class="form-container">
-    <p class="form-header">Login</p>
-    <form method="POST" action="/login">
-        <label>Username:</label>
-        <input type="text" name="username"><br>
-        <label>Password:</label>
-        <input type="password" name="password"><br>
-        <input type="submit" value="Login">
-    </form>
-  </div>
-  <a href="/signup">Sign Up</a>
-  <hr><%= msg %>
+        
+<body>  
+    <div class="form-container">
+        <p class="form-header">Login</p>
+        <form method="POST" action="/login">
+            <label>Username:</label>
+            <input type="text" id="username" name="username"><br>
+            <label>Password:</label>
+            <input type="password" id="password" name="password"><br>
+            <input type="submit" id="login" value="Login">
+        </form>
+    </div>
+    <a id="signUpLink" href="/signup">Sign Up</a>
+    <hr>
+    <span id="loginMsg">
+    <%= msg %>
+    </span>
 </body>
+        
 </html>
 ```
 Then create views/signup.html
 ```
 <!doctype html>
 <html>
+    
 <head>
-  <title>User Login and Sessions</title>
-  <link rel="stylesheet" type="text/css" 
-      href="/static/css/styles.css" />
+    <title>User Login and Sessions</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/style.css" />
 </head>
-<body>
-  <div class="form-container">
-    <p class="form-header">Sign Up</p>
-    <form method="POST" action="/signup">
-      <label>Username:</label>
-        <input type="text" name="username"><br>
-      <label>Password:</label>
-        <input type="password" name="password"><br>
-      <label>Email:</label>
-        <input type="email" name="email"><br>
-      <input type="submit" value="Register">
-    </form>       
-  </div>
-  <hr><%= msg %>
-</body>
+        
+<body>  
+    <div class="form-container">
+        <p class="form-header">Sign Up</p>
+        <form method="POST" action="/signup">
+            <label>Username:</label>
+            <input type="text" id="username" name="username"><br>
+            <label>Password:</label>
+            <input type="password" id="password" name="password"><br>
+            <label>Email:</label>
+            <input type="email" id="email" name="email"><br>
+            <input type="submit" id="register" value="Register">
+        </form>
+    </div>
+    <hr>
+    <span id="signupMsg">
+    <%= msg %>
+    </span>
+</body> 
+
 </html>
+
 ```
 Then create views/user.html
 ```
 <!doctype html>
 <html ng-app="myApp">
+    
 <head>
-  <title>User Login and Sessions</title>
-  <link rel="stylesheet" type="text/css" 
-      href="/static/css/styles.css" />
+    <title>User Login and Sessions</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/style.css" />
 </head>
-<body>
-  <div class="form-container" ng-controller="myController">
-    <p class="form-header">User Profile</p>
-    <form method="POST" action="/user/update">
-       <label>Username:</label>
-         <input type="text" name="username" 
-                ng-model="user.username" disabled><br>
-       <label>Email:</label>
-         <input type="email" name="email" 
-                ng-model="user.email"><br>
-       <label>Favorite Color:</label>
-         <input type="text" name="color" 
-                ng-model="user.color"><br>
-       <input type="submit" value="Save">
-    </form>       
-  </div>
-  <form method="POST" action="/user/delete">
-    <input type="submit" value="Delete User">
-  </form>
-  <hr><%= msg %>
-  <script src="http://code.angularjs.org/1.2.9/angular.min.js"></script>
-  <script src="/static/js/my_app.js"></script>
-  <a href="/">Home</a>
+        
+<body>  
+    <div class="form-container" ng-controller="myController">
+        <p id="sectionTitle" class="form-header">User Profile</p>
+        <form method="POST" action="/user/update">
+            <label>Username:</label>
+            <input type="text" id="username" name="username" ng-model="user.username" disabled><br>
+            <label>Email:</label>
+            <input type="email" id="email" name="email" ng-model="user.email"><br>          
+            <label>Favorite Color:</label>
+            <input type="text" id="color" name="color" ng-model="user.color"><br>   
+            <input type="submit" id="save" value="Save">
+        </form>
+    </div>
+    <form method="POST" action="/user/delete">
+        <input type="submit" id="delete" value="Delete User">
+    </form>
+    <hr>
+    <span id="userMsg">
+    <%= msg %>
+    </span>
+    <script src="http://code.angularjs.org/1.2.9/angular.min.js"></script>
+    <script src="/javascripts/my_app.js"></script>
+    <a id="homeLink" href="/">Home</a>
 </body>
+
 </html>
+
 ```
-You will also need static/css/styles.css
+You will also need public/stylesheets/style.css
 ```
-div.form-container{
-  display: inline-block;
-  border: 4px ridge blue;
-  width: 280px;
-  border-radius:10px;
-  margin:10px;
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
-p.form-header{
-  margin:0px;
-  font: 24px bold;
-  color:white;  background:blue;
-  text-align:center;
+
+a {
+  color: #00B7FF;
 }
-form{
-  margin:10px;
-}
-label{ width:80px; display: inline-block;}
-input{
-  border: 3px ridge blue;
-  border-radius:5px;
-  padding:3px;
-}
-input[type=submit]{
-  font: 18px bold;
-  width: 120px;
-  color:white;  background:blue;
-  margin-top:15px;
-  margin-left:85px;
-}
+
 ```
-And you will need the angular controller "static/js/my_app.js"
+And you will need the angular controller "public/javascripts/my_app.js"
 ```js
 angular.module('myApp', []).
-  controller('myController', ['$scope', '$http', 
+  controller('myController', ['$scope', '$http',
                               function($scope, $http) {
     $http.get('/user/profile')
         .success(function(data, status, headers, config) {
@@ -415,10 +476,8 @@ angular.module('myApp', []).
   }]);
 ```
 
-Test your application to make sure you can create a new user, change the colors and see them preserved during the session, then logout to destroy the session.  You can run it by typing:
-<pre>
-node auth_server.js
-</pre>
+Test your application to make sure you can create a new user, change the colors and see them preserved during the session, then logout to destroy the session. 
+
 You will find that you need to install several packages:
 <pre>
 npm install 
@@ -438,7 +497,7 @@ You should test your server to make sure it works correctly. You should have uti
 <strong>Behavior</strong> |	<strong>Points</strong>
 --- | ---
 You can create a new user who is auto-logged-in | 25
-When you logout, you can login using that created user. | 15
-User color changes persist through authentication cycles. | 15
-When you logout the session is destroyed and non-authenticated users cannot access the site. | 20
-Your code is included in your submission, your application works with the test driver, and your page looks really good. This is subjective, so wow us. | 25
+When you logout, you can login using that created user. | 25
+User color changes persist through authentication cycles. | 25
+When you logout the session is destroyed and non-authenticated users cannot access the site. | 15
+Your code is included in your submission, your application works with the test driver, and your page looks really good. This is subjective, so wow us. | 10
