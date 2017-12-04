@@ -1,5 +1,5 @@
-# Lab6-Passport
-CS260 Passport Lab
+# Lab6-Authentication
+CS260 Authentication Lab
 
 Authentication is a critical part of almost any application.  Passport allows you to use an authenticaion framework for local database authentication as well as authentication through google, twitter or facebook.  In this lab, you will set up local authentication for your application.  
 
