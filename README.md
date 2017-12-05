@@ -466,18 +466,7 @@ Then create views/error.html
 
 
 ```
-You will also need public/stylesheets/style.css
-```
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-}
 
-a {
-  color: #00B7FF;
-}
-
-```
 And you will need the angular controller "public/javascripts/my_app.js"
 ```js
 angular.module('myApp', []).
