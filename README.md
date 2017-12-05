@@ -447,6 +447,25 @@ Then create views/user.html
 </html>
 
 ```
+Then create views/error.html
+
+```
+<!doctype html>
+<html>
+
+<head>
+    <title>User Login and Sessions</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/style.css" />
+</head>
+
+<body>
+<h1> Error </h1>
+</body>
+
+</html>
+
+
+```
 You will also need public/stylesheets/style.css
 ```
 body {
