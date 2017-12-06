@@ -189,7 +189,7 @@ module.exports = router;
 ```
 
 #4. Now you need to implement the route code to support interaction with the MongoDB model. 
-Put it in "controllers/users_conroller.js".
+Put it in "controllers/users_controller.js".
 ```javascript
 var crypto = require('crypto');
 var mongoose = require('mongoose'),
