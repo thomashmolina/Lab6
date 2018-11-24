@@ -40,23 +40,26 @@ The line "require('./models/users_model.js');" ensures that the User model is lo
 The Express configuration code uses the connect-mongo library to register the MongoDB connection as the persistent store for the authenticated sessions. Notice that the connect-mongo store is passed an object with session set to the express-session module instance. Also notice that the db value in the mongoStore instance is set to the mongoose.connection.db database that is already connected.  The session will be passed back to the browser in a cookie and will be sent to the server each time another HTTP request is made.  You can change the port from 3000 to something else if you want to.
 
 ```javascript
+var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
 var cookieParser = require('cookie-parser');
+var logger = require('morgan');
 var bodyParser = require('body-parser');
 var expressSession = require('express-session');
 var mongoStore = require('connect-mongo')({session: expressSession});
 var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/auth', { useNewUrlParser: true });
 require('./models/users_model.js');
-var conn = mongoose.connect('mongodb://localhost/myapp', { useMongoClient: true });
-
-var routes = require('./routes/index');
-var users = require('./routes/users');
+var db = mongoose.connection; //Saves the connection as a variable to use
+db.on('error', console.error.bind(console, 'connection error:')); //Checks for connection errors
+db.once('open', function() { //Lets us know when we're connected
+    console.log('Connected');
+});
+var indexRouter = require('./routes/index');
+var usersRouter = require('./routes/users');
 
 var app = express();
-
 app.use(expressSession({
   secret: 'SECRET',
   cookie: {maxAge:2628000000},
@@ -73,48 +76,30 @@ app.engine('.html', require('ejs').__express);
 app.set('view engine', 'html');
 
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(__dirname + '/public/favicon.ico'));
 app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', routes);
-app.use('/users', users);
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-    var err = new Error('Not Found');
-    err.status = 404;
-    next(err);
+  next(createError(404));
 });
 
-// error handlers
-
-// development error handler
-// will print stacktrace
-if (app.get('env') === 'development') {
-    app.use(function(err, req, res, next) {
-        res.status(err.status || 500);
-        res.render('error', {
-            message: err.message,
-            error: err
-        });
-    });
-}
-
-// production error handler
-// no stacktraces leaked to user
+// error handler
 app.use(function(err, req, res, next) {
-    res.status(err.status || 500);
-    res.render('error', {
-        message: err.message,
-        error: {}
-    });
-});
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
 
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+});
 
 module.exports = app;
 ```
@@ -488,14 +473,16 @@ Test your application to make sure you can create a new user, change the colors 
 
 You will find that you need to install several packages:
 <pre>
+
 npm install 
+npm install mongoose
 npm install express-session
 npm install connect-mongo
 npm install ejs
 </pre>
 Passoff:
 
-You should test your server to make sure it works correctly. You should have utilized google classroom to get started. Your submission to learningsuite should contain:
+You should test your server to make sure it works correctly. You should have utilized google classroom to get started. Your submission to canvas should contain:
 
 
 	- The URL of the working application on your EC2 node (or other host). 
