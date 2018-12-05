@@ -495,4 +495,4 @@ You can create a new user who is auto-logged-in | 25
 When you logout, you can login using that created user. | 25
 User color changes persist through authentication cycles. | 25
 When you logout the session is destroyed and non-authenticated users cannot access the site. | 15
-Your code is included in your submission, your application works with the test driver, and your page looks really good. This is subjective, so wow us. | 10
+Your code is included in your submission, and your page looks really good. This is subjective, so wow us. | 10
