@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+
+    <head>
+        <title>User Login and Sessions</title>
+        <link rel="stylesheet" type="text/css" href="/stylesheets/style.css" />
+    </head>
+
+    <body>
+        <div class="form-container">
+            <p class="form-header login">Login</p>
+            <form method="POST" action="/login">
+                <input type="text" id="username" name="username"><br>
+                <input type="password" id="password" name="password"><br>
+                <br>
+                <input type="submit" id="login" value="Login" class="login-button">
+                <br>
+                <br>
+            </form>
+        </div>
+        <a id="signUpLink" href="/signup" class="login-button">Sign Up</a>
+        <hr>
+        <span id="loginMsg">
+    <%= msg %>
+    </span>
+    </body>
+
+</html>
